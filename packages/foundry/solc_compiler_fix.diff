@@ -1,5 +1,5 @@
 --- a/src/compilers/solc/compiler.rs	2026-05-16 11:28:50.620497671 +0600
-+++ b/src/compilers/solc/compiler.rs	2026-05-17 09:29:56.572187505 +0600
++++ b/src/compilers/solc/compiler.rs	2026-05-17 10:08:36.424187643 +0600
 @@ -18,6 +18,72 @@
  /// Extensions acceptable by solc compiler.
  pub const SOLC_EXTENSIONS: &[&str] = &["sol", "yul"];
@@ -244,7 +244,7 @@
      }
 
      /// Verify that the checksum for this version of solc is correct. We check against the SHA256
-@@ -530,15 +615,13 @@
+@@ -530,13 +615,12 @@
      /// Either finds an installed Solc version or installs it if it's not found.
      #[cfg(feature = "svm-solc")]
      pub fn find_or_install(version: &Version) -> Result<Self> {
@@ -262,7 +262,5 @@
 +        let sys_version = Self::version(&path)?;
 +        return Ok(Self::new_with_version(path, sys_version));
      }
-+}
+ }
 
- #[cfg(feature = "async")]
- impl Solc {
