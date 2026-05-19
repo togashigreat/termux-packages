@@ -29,7 +29,7 @@ This patch will restore the old behaviour. For Termux we know how it is going.
 -        for env in self.target_envs(env)?.iter().rev() {
 +        for env in self.target_envs(env)?.iter() {
              if let Some(var) = self.getenv(env) {
-+                if any_set {
++                if any_set && *env != "TY_VERSION" {
 +                    continue;
 +                }
                  any_set = true;
