@@ -46,7 +46,8 @@ termux_step_pre_configure() {
 
 	sed -i '/\[patch.crates-io\]/a cc = { path = "./vendor/cc" }' Cargo.toml
 	sed -i '/\[patch.crates-io\]/a aws-lc-sys = { path = "./vendor/aws-lc-sys" }' Cargo.toml
-	sed -i '/\[patch.crates-io\]/a foundry-compilers = { path = "./vendor/foundry-compilers" }' Cargo.toml
+	# replace existing foundry-compilers
+	sed -i 's|^foundry-compilers\s*=.*|foundry-compilers = { path = "./vendor/foundry-compilers" }|' Cargo.toml
 	sed -i '/\[patch.crates-io\]/a rustls-platform-verifier = { path = "./vendor/rustls-platform-verifier" }' Cargo.toml
 }
 
