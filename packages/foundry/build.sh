@@ -6,7 +6,7 @@ TERMUX_PKG_MAINTAINER="@termux"
 TERMUX_PKG_VERSION="1.8.1"
 TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL="https://github.com/foundry-rs/foundry/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz"
-TERMUX_PKG_SHA256=e8c3a5470233992dda512f93d768940249f20ff20be27b430664dcdcf5df1a16
+TERMUX_PKG_SHA256=1829d51ddd64abb78a4cce0f95684f2a18cbaa131e8a0bc2e8d44b0be34d0d81
 TERMUX_PKG_DEPENDS="libiconv, ca-certificates, zlib, openssl, libssh2, pcre2, libgit2"
 TERMUX_PKG_BUILD_IN_SRC=true
 
