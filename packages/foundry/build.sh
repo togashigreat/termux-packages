@@ -37,7 +37,7 @@ termux_step_pre_configure() {
 		-e "s%\@TERMUX_PREFIX\@%${TERMUX_PREFIX}%g" \
 		./vendor/foundry-compilers/src/compilers/solc/compiler.rs
 
-	find vendor/rustls-platform-verifier -type f -print0 | \
+	find vendor/rustls-platform-verifier -type f -name "*.rs" -print0 | \
 		xargs -0 sed -i \
 		-e 's|"android"|"disabling_this_because_it_is_for_building_an_apk"|g' \
 		-e "s|ANDROID|DISABLING_THIS_BECAUSE_IT_IS_FOR_BUILDING_AN_APK|g" \
