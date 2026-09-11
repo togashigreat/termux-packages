@@ -62,11 +62,12 @@ termux_step_pre_configure() {
 		sed -i 's|cfg(target_os = "android")|cfg(target_os = "disabled_android_apk")|g' vendor/rustls-platform-verifier/Cargo.toml
 	fi
 
-	# Force waitpid-any to include android in its target_os = "linux" checks
+	# Ensure waitpid-any uses fallback.rs on Android instead of linux.rs
 	if [ -d vendor/waitpid-any ]; then
 		find vendor/waitpid-any -type f -name "*.rs" -print0 | \
 			xargs -0 sed -i \
-			-e 's|target_os = "linux"|any(target_os = "linux", target_os = "android")|g' \
+			-e 's|target_os = "linux"|all(target_os = "linux", not(target_os = "android"))|g' \
+			-e 's|not(target_os = "linux")|any(not(target_os = "linux"), target_os = "android")|g' \
 			2>/dev/null || true
 	fi
 
