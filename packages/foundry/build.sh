@@ -40,9 +40,9 @@ termux_step_pre_configure() {
 	local svm_rs_build_patch="$TERMUX_PKG_BUILDER_DIR/svm-rs-build-patch.diff"
 	patch -p1 -d vendor/svm-rs-builds < "$svm_rs_build_patch"
 
-	sed -i \
-		-e "s%\@TERMUX_PREFIX\@%${TERMUX_PREFIX}%g" \
-		./vendor/foundry-compilers/src/compilers/solc/compiler.rs
+	# sed -i \
+	# 	-e "s%\@TERMUX_PREFIX\@%${TERMUX_PREFIX}%g" \
+	# 	./vendor/foundry-compilers/src/compilers/solc/compiler.rs
 
 	find vendor/rustls-platform-verifier -type f -print0 | \
 		xargs -0 sed -i \
