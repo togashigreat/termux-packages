@@ -38,11 +38,28 @@ termux_step_pre_configure() {
 	local svm_rs_builds_patch="$TERMUX_PKG_BUILDER_DIR/svm-rs-build-patch.diff"
 	patch -p1 -d vendor/svm-rs-builds < "$svm_rs_builds_patch"
 
+	# find vendor/rustls-platform-verifier -type f -name "*.rs" -print0 | \
+	# 	xargs -0 sed -i \
+	# 	-e 's|"android"|"disabling_this_because_it_is_for_building_an_apk"|g' \
+	# 	-e "s|ANDROID|DISABLING_THIS_BECAUSE_IT_IS_FOR_BUILDING_AN_APK|g" \
+	# 	-e 's|"linux"|"android"|g'
+# 1. Update the Rust source files to treat the Android APK target as a disabled flag
+# This prevents compilation of JNI/Android-service code that doesn't work in Termux
 	find vendor/rustls-platform-verifier -type f -name "*.rs" -print0 | \
 		xargs -0 sed -i \
-		-e 's|"android"|"disabling_this_because_it_is_for_building_an_apk"|g' \
-		-e "s|ANDROID|DISABLING_THIS_BECAUSE_IT_IS_FOR_BUILDING_AN_APK|g" \
-		-e 's|"linux"|"android"|g'
+		-e 's|target_os = "android"|target_os = "disabled_android_apk"|g' \
+		-e 's|not(target_os = "android")|not(target_os = "disabled_android_apk")|g' \
+		2>/dev/null || true
+
+	# 2. Modify Cargo.toml to let Android fall into the standard Unix dependency bucket
+	# This ensures rustls-native-certs is compiled and available when building in Termux
+	if [ -f vendor/rustls-platform-verifier/Cargo.toml ]; then
+		# Remove ', not(target_os = "android")' from the Unix block so Termux picks up rustls-native-certs
+		sed -i 's|, not(target_os = "android")||g' vendor/rustls-platform-verifier/Cargo.toml
+
+		# Neutralize the Android APK block so Cargo doesn't look for the missing local relative path '../android-release-support'
+		sed -i 's|cfg(target_os = "android")|cfg(target_os = "disabled_android_apk")|g' vendor/rustls-platform-verifier/Cargo.toml
+	fi
 
 
 	sed -i '/\[patch.crates-io\]/a cc = { path = "./vendor/cc" }' Cargo.toml
