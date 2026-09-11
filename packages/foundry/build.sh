@@ -7,6 +7,7 @@ TERMUX_PKG_VERSION="1.8.1"
 TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL="https://github.com/foundry-rs/foundry/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz"
 TERMUX_PKG_SHA256=1829d51ddd64abb78a4cce0f95684f2a18cbaa131e8a0bc2e8d44b0be34d0d81
+# TERMUX_PKG_SHA256=e8c3a5470233992dda512f93d768940249f20ff20be27b430664dcdcf5df1a16
 TERMUX_PKG_DEPENDS="libiconv, ca-certificates, zlib, openssl, libssh2, pcre2, libgit2"
 TERMUX_PKG_BUILD_IN_SRC=true
 
@@ -17,8 +18,9 @@ termux_step_pre_configure() {
 	find ./vendor \
 		-mindepth 1 -maxdepth 1 -type d \
 		! -wholename ./vendor/cc \
+		! -wholename ./vendor/svm-rs \
+		! -wholename ./vendor/svm-rs-builds \
 		! -wholename ./vendor/aws-lc-sys \
-		! -wholename ./vendor/foundry-compilers \
 		! -wholename ./vendor/rustls-platform-verifier \
 		-exec rm -rf '{}' \;
 
@@ -30,12 +32,11 @@ termux_step_pre_configure() {
 	local aws_patch="$TERMUX_PKG_BUILDER_DIR/aws-lc-sys.diff"
 	patch -p1 -d vendor/aws-lc-sys < "$aws_patch"
 
-	local solc_compiler_patch="$TERMUX_PKG_BUILDER_DIR/solc_compiler_fix.diff"
-	patch -p1 -d vendor/foundry-compilers < "$solc_compiler_patch"
+	local svm_rs_patch="$TERMUX_PKG_BUILDER_DIR/svm-rs-solc-patch.diff"
+	patch -p1 -d vendor/svm-rs < "$svm_rs_patch"
 
-	sed -i \
-		-e "s%\@TERMUX_PREFIX\@%${TERMUX_PREFIX}%g" \
-		./vendor/foundry-compilers/src/compilers/solc/compiler.rs
+	local svm_rs_builds_patch="$TERMUX_PKG_BUILDER_DIR/svm-rs-build-patch.diff"
+	patch -p1 -d vendor/svm-rs-builds < "$svm_rs_builds_patch"
 
 	find vendor/rustls-platform-verifier -type f -name "*.rs" -print0 | \
 		xargs -0 sed -i \
@@ -45,8 +46,9 @@ termux_step_pre_configure() {
 
 
 	sed -i '/\[patch.crates-io\]/a cc = { path = "./vendor/cc" }' Cargo.toml
+	sed -i '/\[patch.crates-io\]/a svm-rs = { path = "./vendor/svm-rs" }' Cargo.toml
+	sed -i '/\[patch.crates-io\]/a svm-rs-builds = { path = "./vendor/svm-rs-builds" }' Cargo.toml
 	sed -i '/\[patch.crates-io\]/a aws-lc-sys = { path = "./vendor/aws-lc-sys" }' Cargo.toml
-	sed -i 's|^foundry-compilers = { git = .*|foundry-compilers = { path = "./vendor/foundry-compilers" }|' Cargo.toml
 	sed -i '/\[patch.crates-io\]/a rustls-platform-verifier = { path = "./vendor/rustls-platform-verifier" }' Cargo.toml
 }
 
