@@ -20,6 +20,7 @@ termux_step_pre_configure() {
 		! -wholename ./vendor/cc \
 		! -wholename ./vendor/svm-rs \
 		! -wholename ./vendor/svm-rs-builds \
+		! -wholename ./vendor/waitpid-any \
 		! -wholename ./vendor/aws-lc-sys \
 		! -wholename ./vendor/rustls-platform-verifier \
 		-exec rm -rf '{}' \;
@@ -61,8 +62,17 @@ termux_step_pre_configure() {
 		sed -i 's|cfg(target_os = "android")|cfg(target_os = "disabled_android_apk")|g' vendor/rustls-platform-verifier/Cargo.toml
 	fi
 
+	# Force waitpid-any to include android in its target_os = "linux" checks
+	if [ -d vendor/waitpid-any ]; then
+		find vendor/waitpid-any -type f -name "*.rs" -print0 | \
+			xargs -0 sed -i \
+			-e 's|target_os = "linux"|any(target_os = "linux", target_os = "android")|g' \
+			2>/dev/null || true
+	fi
+
 
 	sed -i '/\[patch.crates-io\]/a cc = { path = "./vendor/cc" }' Cargo.toml
+	sed -i '/\[patch.crates-io\]/a waitpid-any = { path = "./vendor/waitpid-any" }' Cargo.toml
 	sed -i '/\[patch.crates-io\]/a svm-rs = { path = "./vendor/svm-rs" }' Cargo.toml
 	sed -i '/\[patch.crates-io\]/a svm-rs-builds = { path = "./vendor/svm-rs-builds" }' Cargo.toml
 	sed -i '/\[patch.crates-io\]/a aws-lc-sys = { path = "./vendor/aws-lc-sys" }' Cargo.toml
