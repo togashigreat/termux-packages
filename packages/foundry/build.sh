@@ -18,8 +18,9 @@ termux_step_pre_configure() {
 		-mindepth 1 -maxdepth 1 -type d \
 		! -wholename ./vendor/cc \
 		! -wholename ./vendor/aws-lc-sys \
-		! -wholename ./vendor/foundry-compilers \
 		! -wholename ./vendor/rustls-platform-verifier \
+		! -wholename ./vendor/svm-rs \
+		! -wholename ./vendor/svm-rs-builds \
 		-exec rm -rf '{}' \;
 
 	local cc_patch="$TERMUX_PKG_BUILDER_DIR/rust-cc-do-not-concatenate-all-the-CFLAGS.diff"
@@ -30,8 +31,14 @@ termux_step_pre_configure() {
 	local aws_patch="$TERMUX_PKG_BUILDER_DIR/aws-lc-sys.diff"
 	patch -p1 -d vendor/aws-lc-sys < "$aws_patch"
 
-	local solc_compiler_patch="$TERMUX_PKG_BUILDER_DIR/solc_compiler_fix.diff"
-	patch -p1 -d vendor/foundry-compilers < "$solc_compiler_patch"
+	# local solc_compiler_patch="$TERMUX_PKG_BUILDER_DIR/solc_compiler_fix.diff"
+	# patch -p1 -d vendor/foundry-compilers < "$solc_compiler_patch"
+
+	local svm_rs_patch="$TERMUX_PKG_BUILDER_DIR/svm-rs-solc-patch.diff"
+	patch -p1 -d vendor/svm-rs < "$svm_rs_patch"
+
+	local svm_rs_build_patch="$TERMUX_PKG_BUILDER_DIR/svm-rs-build-patch.diff"
+	patch -p1 -d vendor/svm-rs-builds < "$svm_rs_build_patch"
 
 	sed -i \
 		-e "s%\@TERMUX_PREFIX\@%${TERMUX_PREFIX}%g" \
@@ -45,8 +52,10 @@ termux_step_pre_configure() {
 
 
 	sed -i '/\[patch.crates-io\]/a cc = { path = "./vendor/cc" }' Cargo.toml
+	sed -i '/\[patch.crates-io\]/a svm-rs = { path = "./vendor/svm-rs" }' Cargo.toml
+	sed -i '/\[patch.crates-io\]/a svm-rs-builds = { path = "./vendor/svm-rs-builds" }' Cargo.toml
 	sed -i '/\[patch.crates-io\]/a aws-lc-sys = { path = "./vendor/aws-lc-sys" }' Cargo.toml
-	sed -i '/\[patch.crates-io\]/a foundry-compilers = { path = "./vendor/foundry-compilers" }' Cargo.toml
+	# sed -i '/\[patch.crates-io\]/a foundry-compilers = { path = "./vendor/foundry-compilers" }' Cargo.toml
 	sed -i '/\[patch.crates-io\]/a rustls-platform-verifier = { path = "./vendor/rustls-platform-verifier" }' Cargo.toml
 }
 
