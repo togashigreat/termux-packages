@@ -7,7 +7,6 @@ TERMUX_PKG_VERSION="1.8.1"
 TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL="https://github.com/foundry-rs/foundry/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz"
 TERMUX_PKG_SHA256=1829d51ddd64abb78a4cce0f95684f2a18cbaa131e8a0bc2e8d44b0be34d0d81
-# TERMUX_PKG_SHA256=e8c3a5470233992dda512f93d768940249f20ff20be27b430664dcdcf5df1a16
 TERMUX_PKG_DEPENDS="libiconv, ca-certificates, zlib, openssl, libssh2, pcre2, libgit2"
 TERMUX_PKG_BUILD_IN_SRC=true
 
@@ -18,11 +17,11 @@ termux_step_pre_configure() {
 	find ./vendor \
 		-mindepth 1 -maxdepth 1 -type d \
 		! -wholename ./vendor/cc \
+		! -wholename ./vendor/aws-lc-sys \
+		! -wholename ./vendor/rustls-platform-verifier \
 		! -wholename ./vendor/svm-rs \
 		! -wholename ./vendor/svm-rs-builds \
 		! -wholename ./vendor/waitpid-any \
-		! -wholename ./vendor/aws-lc-sys \
-		! -wholename ./vendor/rustls-platform-verifier \
 		-exec rm -rf '{}' \;
 
 	local cc_patch="$TERMUX_PKG_BUILDER_DIR/rust-cc-do-not-concatenate-all-the-CFLAGS.diff"
@@ -39,45 +38,30 @@ termux_step_pre_configure() {
 	local svm_rs_builds_patch="$TERMUX_PKG_BUILDER_DIR/svm-rs-build-patch.diff"
 	patch -p1 -d vendor/svm-rs-builds < "$svm_rs_builds_patch"
 
-	# find vendor/rustls-platform-verifier -type f -name "*.rs" -print0 | \
-	# 	xargs -0 sed -i \
-	# 	-e 's|"android"|"disabling_this_because_it_is_for_building_an_apk"|g' \
-	# 	-e "s|ANDROID|DISABLING_THIS_BECAUSE_IT_IS_FOR_BUILDING_AN_APK|g" \
-	# 	-e 's|"linux"|"android"|g'
-# 1. Update the Rust source files to treat the Android APK target as a disabled flag
-# This prevents compilation of JNI/Android-service code that doesn't work in Termux
+	# updated for recent version
 	find vendor/rustls-platform-verifier -type f -name "*.rs" -print0 | \
 		xargs -0 sed -i \
 		-e 's|target_os = "android"|target_os = "disabled_android_apk"|g' \
 		-e 's|not(target_os = "android")|not(target_os = "disabled_android_apk")|g' \
 		2>/dev/null || true
-
-	# 2. Modify Cargo.toml to let Android fall into the standard Unix dependency bucket
 	# This ensures rustls-native-certs is compiled and available when building in Termux
 	if [ -f vendor/rustls-platform-verifier/Cargo.toml ]; then
 		# Remove ', not(target_os = "android")' from the Unix block so Termux picks up rustls-native-certs
 		sed -i 's|, not(target_os = "android")||g' vendor/rustls-platform-verifier/Cargo.toml
 
-		# Neutralize the Android APK block so Cargo doesn't look for the missing local relative path '../android-release-support'
 		sed -i 's|cfg(target_os = "android")|cfg(target_os = "disabled_android_apk")|g' vendor/rustls-platform-verifier/Cargo.toml
 	fi
 
-	# Ensure waitpid-any uses fallback.rs on Android instead of linux.rs
-	if [ -d vendor/waitpid-any ]; then
-		find vendor/waitpid-any -type f -name "*.rs" -print0 | \
-			xargs -0 sed -i \
-			-e 's|target_os = "linux"|all(target_os = "linux", not(target_os = "android"))|g' \
-			-e 's|not(target_os = "linux")|any(not(target_os = "linux"), target_os = "android")|g' \
-			2>/dev/null || true
-	fi
+	local waitpid_any_patch="$TERMUX_PKG_BUILDER_DIR/waitpid-any-patch.diff"
+	patch -p1 -d vendor/waitpid-any < "$waitpid_any_patch"
 
 
 	sed -i '/\[patch.crates-io\]/a cc = { path = "./vendor/cc" }' Cargo.toml
+	sed -i '/\[patch.crates-io\]/a aws-lc-sys = { path = "./vendor/aws-lc-sys" }' Cargo.toml
+	sed -i '/\[patch.crates-io\]/a rustls-platform-verifier = { path = "./vendor/rustls-platform-verifier" }' Cargo.toml
 	sed -i '/\[patch.crates-io\]/a waitpid-any = { path = "./vendor/waitpid-any" }' Cargo.toml
 	sed -i '/\[patch.crates-io\]/a svm-rs = { path = "./vendor/svm-rs" }' Cargo.toml
 	sed -i '/\[patch.crates-io\]/a svm-rs-builds = { path = "./vendor/svm-rs-builds" }' Cargo.toml
-	sed -i '/\[patch.crates-io\]/a aws-lc-sys = { path = "./vendor/aws-lc-sys" }' Cargo.toml
-	sed -i '/\[patch.crates-io\]/a rustls-platform-verifier = { path = "./vendor/rustls-platform-verifier" }' Cargo.toml
 }
 
 termux_step_make() {
