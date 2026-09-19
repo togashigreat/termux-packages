@@ -3,10 +3,10 @@ TERMUX_PKG_DESCRIPTION="A blazing fast, portable and modular toolkit for Ethereu
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_LICENSE_FILE="LICENSE-MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="1.8.1"
+TERMUX_PKG_VERSION="1.8.3"
 TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL="https://github.com/foundry-rs/foundry/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz"
-TERMUX_PKG_SHA256=1829d51ddd64abb78a4cce0f95684f2a18cbaa131e8a0bc2e8d44b0be34d0d81
+TERMUX_PKG_SHA256=726c55fac4dfc0ca0062b9c2f6ed5afce66c376e5924f78fcc0e8f623a9a9299
 TERMUX_PKG_DEPENDS="libiconv, ca-certificates, zlib, openssl, libssh2, pcre2, libgit2"
 TERMUX_PKG_BUILD_IN_SRC=true
 
